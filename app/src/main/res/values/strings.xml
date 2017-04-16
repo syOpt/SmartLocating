@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SmartLocating</string>
+    <string name="button_enlarge">Enlarge</string>
+    <string name="button_shrink">shrink</string>
+    <string name="button_reset">reset</string>
+    <string name="xValue">0.0</string>
+    <string name="yValue">0.0</string>
+</resources>
