@@ -6,18 +6,21 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 
-import static android.media.AudioManager.ERROR_DEAD_OBJECT;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import static android.media.AudioManager.STREAM_MUSIC;
-import static android.media.AudioRecord.ERROR_BAD_VALUE;
 import static android.media.AudioRecord.RECORDSTATE_RECORDING;
 import static android.media.AudioRecord.STATE_UNINITIALIZED;
-import static android.media.AudioTrack.ERROR;
-import static android.media.AudioTrack.ERROR_INVALID_OPERATION;
 
 public class MainActivity extends AppCompatActivity {
     private recAudioBuffer recBuff = new recAudioBuffer();
@@ -38,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     public void startMeasuring(View v) {
@@ -141,20 +145,49 @@ public class MainActivity extends AppCompatActivity {
                         throw new RuntimeException("Failed to start recording.");
 
                     // analyze
-                    recBufferReadRes = 0;
-                    while (recBufferReadRes >= 0) {
-                        recBufferReadRes = recorder.read(recBuffer, 0, recBufferSize / 10);
-                        // analyse data
-                        int avg = 0;
-                        for (int i = 0; i < recBufferReadRes; ++i) {
-                            avg += recBuffer[i];
+                    try {
+                        // initialize
+                        int r = 0;
+                        recBufferReadRes = 0;
+                        String filePath = "sdcard/com.sy.op.SmartLocating";
+                        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+                        Date curDate = new Date(System.currentTimeMillis());
+                        String fileName = formatter.format(curDate) + ".csv";
+                        File fl = new File(filePath);
+                        if (!fl.exists()) {
+                            fl.mkdirs();
                         }
-                        if (recBufferReadRes != 0) avg /= recBufferReadRes;
+                        fl = new File(filePath + "/" + fileName);
+                        if (!fl.exists()) {
+                            fl.createNewFile();
+                        }
+                        FileWriter fOStr = new FileWriter(filePath + "/" + fileName);
 
-                        // send result to UI thread
-                        Message msg = new Message();
-                        msg.arg1 = avg;
-                        MainActivity.this.recBuffHdl.sendMessage(msg);
+                        while (recBufferReadRes >= 0) {
+                            recBufferReadRes = recorder.read(recBuffer, 0, recBufferSize / 10);
+                            // analyse data
+                            int avg = 0;
+                            for (int i = 0; i < recBufferReadRes; ++i) {
+                                avg += recBuffer[i];
+                            }
+                            if (recBufferReadRes != 0) avg /= recBufferReadRes;
+
+                            // send result to UI thread
+                            Message msg = new Message();
+                            msg.arg1 = avg;
+                            MainActivity.this.recBuffHdl.sendMessage(msg);
+
+                            // save data in file
+                            if (r < 10 * recFs) {  // save first 10s' data
+                                for (int i = 0; i < recBufferReadRes; ++i) {
+                                    ++r;
+                                    fOStr.write(String.valueOf(recBuffer[i]) + ", ");
+                                }
+                            } else
+                                fOStr.close();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                     break;
                 case "recStp":
