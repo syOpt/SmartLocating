@@ -13,7 +13,6 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -181,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
                             if (r < 10 * recFs) {  // save first 10s' data
                                 for (int i = 0; i < recBufferReadRes; ++i) {
                                     ++r;
-                                    fOStr.write(String.valueOf(recBuffer[i]) + ", ");
+                                    fOStr.write(String.valueOf(recBuffer[i]) + "\n");
                                 }
                             } else
                                 fOStr.close();
