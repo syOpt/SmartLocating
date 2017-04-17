@@ -5,4 +5,7 @@
     <string name="button_reset">reset</string>
     <string name="xValue">0.0</string>
     <string name="yValue">0.0</string>
+    <string name="btnCalibrationText">Calibration</string>
+    <string name="btnStartText">Start</string>
+    <string name="btnStopText">Stop</string>
 </resources>

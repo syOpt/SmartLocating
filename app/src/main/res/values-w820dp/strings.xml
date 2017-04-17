@@ -2,4 +2,5 @@
 <resources>
     <string name="xValue">0.0</string>
     <string name="yValue">0.0</string>
+    <string name="btnCalibrationText">Calibration</string>
 </resources>
