@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                         FileWriter fOStr = new FileWriter(filePath + "/" + fileName);
 
                         while (recBufferReadRes >= 0) {
-                            recBufferReadRes = recorder.read(recBuffer, 0, recBufferSize / 10);
+                            recBufferReadRes = recorder.read(recBuffer, 0, recFs / 100); // recFs / 100 : not good coding
                             // analyse data
                             int avg = 0;
                             for (int i = 0; i < recBufferReadRes; ++i) {
@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
                             MainActivity.this.recBuffHdl.sendMessage(msg);
 
                             // save data in file
-                            if (r < 10 * recFs) {  // save first 10s' data
+                            if (r < 15 * recFs) {  // save first 10s' data
                                 for (int i = 0; i < recBufferReadRes; ++i) {
                                     ++r;
                                     fOStr.write(String.valueOf(recBuffer[i]) + "\n");
