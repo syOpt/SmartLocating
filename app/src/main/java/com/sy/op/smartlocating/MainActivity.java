@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         ana.start();
     }
 
-    private double dis4(short[] test, int num) {
+    /*private double dis4(short[] test, int num) {
         num = test.length;
         ti += num;
         short[] inPhase = new short[num];
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return distance[num - 1];
-    }
+    }*/
 
     protected class recAudioBufferHandler extends Handler {
         public recAudioBufferHandler() {}
