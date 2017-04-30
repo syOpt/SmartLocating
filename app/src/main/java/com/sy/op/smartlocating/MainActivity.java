@@ -26,8 +26,9 @@ public class MainActivity extends AppCompatActivity {
     private plyAudioBuffer plyBuff = new plyAudioBuffer();
     private recAudioBufferHandler recBuffHdl = new recAudioBufferHandler();
     private int recFs = 44100, plyFs = 44100;
-    double A = 500, f = 15000, updateTime = 0.5;
-    static int ti = 0;
+    private double A = 500, f = 15000, updateTime = 0.5;
+    private static int ti = 0;
+    private int currentDistance = 0, distanceOffset = 0;
     private int recChannelConfig = AudioFormat.CHANNEL_IN_MONO, plyChannelConfig = AudioFormat.CHANNEL_OUT_MONO;
     private int recAudioEncoding = AudioFormat.ENCODING_PCM_16BIT, plyAudioEncoding = AudioFormat.ENCODING_PCM_16BIT;
     private int recBufferSize = AudioRecord.getMinBufferSize(recFs, recChannelConfig, recAudioEncoding);
@@ -48,19 +49,19 @@ public class MainActivity extends AppCompatActivity {
     public void startMeasuring(View v) {
         findViewById(R.id.btnStart).setEnabled(false);
         findViewById(R.id.btnCalibration).setEnabled(true);
+        findViewById(R.id.btnStop).setEnabled(true);
         playAudio();
         recAnalyse();
     }
 
-    public void calibration(View v) {
-        findViewById(R.id.btnCalibration).setEnabled(false);
-        findViewById(R.id.btnStop).setEnabled(true);
-        calibration();
+    public void onCalibration(View v) {
+        calibrate();
     }
 
     public void stopMeasuring(View v) {
         findViewById(R.id.btnStart).setEnabled(true);
         findViewById(R.id.btnStop).setEnabled(false);
+        findViewById(R.id.btnCalibration).setEnabled(false);
         Thread recStp = new Thread(recBuff);
         recStp.setName("recStp");
         recStp.start();
@@ -82,104 +83,8 @@ public class MainActivity extends AppCompatActivity {
         ana.start();
     }
 
-
-    /*private double dis4(short[] test, int num) {
-        num = test.length;
-        ti += num;
-        short[] inPhase = new short[num];
-        short[] orth = new short[num];
-        for (int i = 0; i < num; ++i) {
-            inPhase[i] = (short)(A * Math.sin(2 * Math.PI * f * (ti - num + i) / recFs));
-            orth[i] = (short)(A * Math.cos(2 * Math.PI * f * (ti - num + i) / recFs));
-        }
-        double temperature = 20.0, voiceVelocity = Math.sqrt(1.4 * 287 * temperature);
-        double k = 2 * Math.PI * voiceVelocity / f;
-        double[][] theta = new double[2][num];
-        theta[0][0] = 0; theta[1][0] = 1;
-        double[] K = new double[2];
-        K[0] = 1; K[1] = 0;
-        double[][] P = new double[2][2];
-        P[0][0] = 1; P[0][1] = 0; P[1][0] = 0; P[1][1] = 1;
-        double Micro = 0.95;
-        double lastExtreDataInPhase = 0, extreDataInPhase = 0, extreIDInPhase=1;
-        double lastExtreDataOrth = 0, extreDataOrth = 0, extreIDOrth = 1;
-        double[] staticInPhase = new double[num];
-        double[] staticOrth = new double[num];
-        double[] dynamicInPhase = new double[num];
-        double[] dynamicOrth = new double[num];
-        double threshold = 1.9;
-        double[] angle = new double[num];
-        angle[1] = 0;
-        double[] distance = new double[num];
-
-        for (int i = 1; i < num - 1; ++i) {
-            double[] hk = new double[2];
-            hk[0] = inPhase[i+1]; hk[1] = orth[i+1];
-            double temp = ((hk[0]*P[0][0]+hk[1]*P[1][0])*hk[0]+(hk[0]*P[0][1]+hk[1]*P[1][1])*hk[1])+Micro;
-            K[0] = (P[0][0]*hk[0]+P[0][1]*hk[1]) / temp;
-            K[1] = (P[1][0]*hk[0]+P[1][1]*hk[1]) / temp;
-            double tempA = P[0][0], tempB = P[0][1], tempC = P[1][0], tempD = P[1][1];
-            P[0][0] = (tempA*(1-K[0]*hk[0])-tempC*K[0]*hk[1])/Micro;
-            P[0][1] = (tempB*(1-K[0]*hk[0])-tempD*K[0]*hk[1])/Micro;
-            P[1][0] = (-tempA * K[1] * hk[0] + tempC * (1 - K[1] * hk[1])) / Micro;
-            P[1][1] = (-tempB * K[1] * hk[0] + tempD * (1 - K[1] * hk[1])) / Micro;
-            temp = test[i + 1] - hk[0] * theta[0][i] - hk[1] * theta[1][i];
-            theta[0][i + 1] = theta[0][i] + K[0] * temp;
-            theta[1][i + 1] = theta[1][i] + K[1] * temp;
-            double newExtreDataInPhase = 0, newExtreIDInPhase = 0, newExtreDataOrth = 0, newExtreIDOrth = 0;
-            if((theta[0][i] >= theta[0][i-1]) && (theta[0][i] >= theta[0][i+1])) {
-                newExtreDataInPhase = theta[0][i];
-                newExtreIDInPhase = 1;
-            }
-            if((theta[0][i] <= theta[0][i-1]) && (theta[0][i] <= theta[0][i+1])) {
-                newExtreDataInPhase = theta[0][i];
-                newExtreIDInPhase = -1;
-            }
-            if((theta[0][i] - theta[0][i-1]) * (theta[0][i+1] - theta[0][i]) >= 0) {
-                staticInPhase[i] = staticInPhase[i - 1];
-            } else if (((extreIDInPhase > 0) && (newExtreIDInPhase > 0) && (newExtreDataInPhase > extreDataInPhase)) || ((extreIDInPhase < 0) && (newExtreIDInPhase) < 0 && (newExtreDataInPhase < extreDataInPhase))) {
-                extreDataInPhase = newExtreDataInPhase;
-                extreIDInPhase = newExtreIDInPhase;
-            } else if ((extreIDInPhase * newExtreIDInPhase < 0) && (Math.abs(newExtreDataInPhase - extreDataInPhase) > threshold)) {
-                lastExtreDataInPhase = extreDataInPhase;
-                extreDataInPhase = newExtreDataInPhase;
-                extreIDInPhase = newExtreIDInPhase;
-                staticInPhase[i + 1] = 0.9 * staticInPhase[i] + 0.1 * (lastExtreDataInPhase + extreDataInPhase) / 2;
-            }
-            dynamicInPhase[i+1]=theta[0][i+1]-staticInPhase[i+1];
-            if ((theta[1][i] >= theta[1][i-1]) && (theta[1][i] >= theta[1][i+1])) {
-                newExtreDataOrth = theta[1][i];
-                newExtreIDOrth = 1;
-            }
-            if ((theta[1][i] <= theta[1][i-1]) && (theta[1][i] <= theta[1][i+1])) {
-                newExtreDataOrth = theta[1][i];
-                newExtreIDOrth = -1;
-            }
-            if ((theta[1][i] - theta[1][i-1]) * (theta[1][i+1] - theta[1][i]) >= 0) {
-                staticOrth[i] = staticOrth[i - 1];
-            } else if (((extreIDOrth > 0) && (newExtreIDOrth > 0) && (newExtreDataOrth > extreDataOrth)) || ((extreIDOrth < 0) && (newExtreIDOrth < 0) && (newExtreDataOrth<extreDataOrth))) {
-                extreDataOrth = newExtreDataOrth;
-                extreIDOrth = newExtreIDOrth;
-            } else if ((extreIDOrth * newExtreIDOrth < 0) && (Math.abs(newExtreDataOrth-extreDataOrth) > threshold)) {
-                lastExtreDataOrth = extreDataOrth;
-                extreDataOrth = newExtreDataOrth;
-                extreIDOrth = newExtreIDOrth;
-                staticOrth[i + 1] = 0.9 * staticOrth[i] + 0.1 * (lastExtreDataOrth + extreDataOrth) / 2;
-            }
-            dynamicOrth[i + 1] = theta[1][i + 1] - staticOrth[i + 1];
-            angle[i + 1] = Math.atan(dynamicOrth[i + 1] / dynamicInPhase[i + 1]);
-            if((Math.abs(angle[i + 1] - angle[i])) < 1) {
-                distance[i + 1] = distance[i] + (angle[i + 1] - angle[i]) / k;
-            } else {
-                distance[i + 1] = distance[i];
-            }
-        }
-
-        return distance[num - 1];
-    }*/
-
-    private void calibration() {
-        
+    private void calibrate() {
+        distanceOffset = currentDistance;
     }
 
 
@@ -278,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
                         angle[0] = 0; angle[1] = 0;
                         double[] distance = new double[3];
                         distance[0] = 0; distance[1] = 0; distance[2] = 0;
-                        double temperature = 20.0, voiceVelocity = Math.sqrt(1.4 * 287 * (temperature + 273.15));
+                        double temperature = 26.0, voiceVelocity = Math.sqrt(1.4 * 287 * (temperature + 273.15));
                         double k = 2 * Math.PI * voiceVelocity / f;
                         recBuffer[0] = 0;
                         /*String filePath = "sdcard/com.sy.op.SmartLocating";
@@ -298,7 +203,6 @@ public class MainActivity extends AppCompatActivity {
                         while (recBufferReadRes >= 0) {
                             recBufferReadRes = recorder.read(recBuffer, 1, (int)(recFs * updateTime));
                             // analyse data
-                            //double res = dis4(recBuffer, recBufferReadRes);
                             for (int i = 0; i < recBufferReadRes; ++i) {
                                 ++ti;
                                 double[] hk = new double[2];
@@ -374,8 +278,9 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             // send result to UI thread
+                            currentDistance = (int)distance[1];
                             Message msg = new Message();
-                            msg.arg1 = (int)distance[1];
+                            msg.arg1 = currentDistance - distanceOffset;
                             MainActivity.this.recBuffHdl.sendMessage(msg);
 
                             /*// save data in file

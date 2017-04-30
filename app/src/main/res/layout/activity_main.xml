@@ -37,6 +37,7 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:enabled="false"
+        android:onClick="onCalibration"
         android:text="@string/btnCalibrationText" />
 
     <TextView
