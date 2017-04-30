@@ -45,9 +45,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void startMeasuring(View v) {
         findViewById(R.id.btnStart).setEnabled(false);
-        findViewById(R.id.btnStop).setEnabled(true);
+        findViewById(R.id.btnCalibration).setEnabled(true);
         playAudio();
         recAnalyse();
+    }
+
+    public void calibration(View v) {
+        findViewById(R.id.btnCalibration).setEnabled(false);
+        findViewById(R.id.btnStop).setEnabled(true);
+        calibration();
     }
 
     public void stopMeasuring(View v) {
@@ -72,6 +78,10 @@ public class MainActivity extends AppCompatActivity {
         Thread ana = new Thread(recBuff);
         ana.setName("ana");
         ana.start();
+    }
+
+    private void calibration() {
+        
     }
 
     protected class recAudioBufferHandler extends Handler {

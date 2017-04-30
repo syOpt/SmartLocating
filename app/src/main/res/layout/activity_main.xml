@@ -46,6 +46,7 @@
         android:layout_below="@+id/btnCalibration"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="81dp"
+        android:textSize="@dimen/text_defaultSize"
         android:text="@string/xValue" />
 
     <TextView
@@ -53,19 +54,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/yValue"
-        tools:text="@string/xValue"
-        android:layout_marginTop="27dp"
-        android:layout_below="@+id/textView3"
-        android:layout_alignLeft="@+id/textView3"
-        android:layout_alignStart="@+id/textView3" />
+        android:textSize="@dimen/text_defaultSize"
+        android:layout_marginTop="25dp"
+        android:layout_below="@+id/txvX"
+        android:layout_centerHorizontal="true" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/txvZ"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"
-        android:text="@string/yValue"
-        tools:text="@string/xValue"
-        android:layout_below="@+id/txvX"
+        android:text="@string/xValue"
+        android:textSize="@dimen/text_defaultSize"
+        android:layout_below="@+id/txvY"
         android:layout_centerHorizontal="true" />
 </RelativeLayout>
