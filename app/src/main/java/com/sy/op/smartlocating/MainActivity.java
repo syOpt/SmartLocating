@@ -47,9 +47,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void startMeasuring(View v) {
         findViewById(R.id.btnStart).setEnabled(false);
-        findViewById(R.id.btnStop).setEnabled(true);
+        findViewById(R.id.btnCalibration).setEnabled(true);
         playAudio();
         recAnalyse();
+    }
+
+    public void calibration(View v) {
+        findViewById(R.id.btnCalibration).setEnabled(false);
+        findViewById(R.id.btnStop).setEnabled(true);
+        calibration();
     }
 
     public void stopMeasuring(View v) {
@@ -75,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         ana.setName("ana");
         ana.start();
     }
+
 
     /*private double dis4(short[] test, int num) {
         num = test.length;
@@ -170,6 +177,11 @@ public class MainActivity extends AppCompatActivity {
 
         return distance[num - 1];
     }*/
+
+    private void calibration() {
+        
+    }
+
 
     protected class recAudioBufferHandler extends Handler {
         public recAudioBufferHandler() {}
