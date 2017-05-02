@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="xValue">0.0</string>
+    <string name="xValue">0mm</string>
     <string name="yValue">0.0</string>
-    <string name="btnCalibrationText">Calibration</string>
+    <string name="zValue">0.0</string>
+    <string name="btnCalibrationText">Calibrate</string>
 </resources>

@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -26,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private plyAudioBuffer plyBuff = new plyAudioBuffer();
     private recAudioBufferHandler recBuffHdl = new recAudioBufferHandler();
     private int recFs = 44100, plyFs = 44100;
-    private double A = 500, f = 15000, updateTime = 0.5;
+    private double A = 500, f = 14000, updateTime = 0.1;
     private static int ti = 0;
     private int currentDistance = 0, distanceOffset = 0;
     private int recChannelConfig = AudioFormat.CHANNEL_IN_MONO, plyChannelConfig = AudioFormat.CHANNEL_OUT_MONO;
@@ -62,6 +63,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnStart).setEnabled(true);
         findViewById(R.id.btnStop).setEnabled(false);
         findViewById(R.id.btnCalibration).setEnabled(false);
+        doStop();
+    }
+
+    private void doStop() {
         Thread recStp = new Thread(recBuff);
         recStp.setName("recStp");
         recStp.start();
@@ -88,18 +93,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    protected class recAudioBufferHandler extends Handler {
+    private class recAudioBufferHandler extends Handler {
         public recAudioBufferHandler() {}
 
         @Override
         public void handleMessage(Message msg) {
             // update distance value
             TextView xVal = (TextView)findViewById(R.id.txvX);
-            xVal.setText(String.valueOf(msg.arg1));
+            xVal.setText(String.valueOf(msg.arg1) + "mm");
         }
     }
 
-    protected class plyAudioBuffer implements Runnable {
+    private class plyAudioBuffer implements Runnable {
 
         @Override
         public void run() {
@@ -140,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    protected class recAudioBuffer implements Runnable {
+    private class recAudioBuffer implements Runnable {
 
         @Override
         public void run() {
@@ -149,9 +154,12 @@ public class MainActivity extends AppCompatActivity {
                     ti = 0;
                     // initialize recorder
                     recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, recFs, recChannelConfig, recAudioEncoding, recBufferSize * 2);
+
                     if (recorder.getState() == STATE_UNINITIALIZED)
                         throw new RuntimeException("Failed to initialize recorder.");
-
+                    else {
+                        recFs = recorder.getSampleRate();
+                    }
                     // start recording
                     recorder.startRecording();
                     if (recorder.getRecordingState() != RECORDSTATE_RECORDING)
@@ -202,6 +210,23 @@ public class MainActivity extends AppCompatActivity {
 
                         while (recBufferReadRes >= 0) {
                             recBufferReadRes = recorder.read(recBuffer, 1, (int)(recFs * updateTime));
+                            /* extract component of frequency f;
+                            FFT mf = new FFT();
+                            Complex[] recBufferComplex = new Complex[recBufferReadRes];
+                            for(int i = 0; i < recBufferReadRes; ++i) {
+                                recBufferComplex[i] = new Complex(recBuffer[i + 1], 0);
+                            }
+                            recBufferComplex = mf.changedLow(recBufferComplex, recBufferReadRes);
+                            recBufferComplex = mf.fft_2(recBufferComplex, recBufferReadRes, 1);
+                            for (int i = 0; i < recBufferReadRes; ++i) {
+                                    recBufferComplex[i].r *= (20 / (Math.pow(i - f * recBufferReadRes / recFs, 2) + 20));
+                                    recBufferComplex[i].i *= (20 / (Math.pow(i - f * recBufferReadRes / recFs, 2) + 20));
+                            }
+                            recBufferComplex = mf.changedLow(recBufferComplex, recBufferReadRes);
+                            recBufferComplex = mf.fft_2(recBufferComplex, recBufferReadRes, -1);
+                            for (int i = 0; i < recBufferReadRes; ++i) {
+                                recBuffer[i + 1] = (short)recBufferComplex[i].r;
+                            }*/
                             // analyse data
                             for (int i = 0; i < recBufferReadRes; ++i) {
                                 ++ti;
@@ -278,11 +303,17 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             // send result to UI thread
-                            currentDistance = (int)distance[1];
-                            Message msg = new Message();
-                            msg.arg1 = currentDistance - distanceOffset;
-                            MainActivity.this.recBuffHdl.sendMessage(msg);
-
+                            if (Math.abs(distance[0] - distance[1]) < 5) {
+                                distance[0] = distance[1];  // real movement
+                            } else {
+                                distance[1] = distance[0];  // noise
+                            }
+                            if (ti % (int)(recFs * updateTime) == 0) {
+                                currentDistance = -(int)(distance[0] * voiceVelocity / 1000);
+                                Message msg = new Message();
+                                msg.arg1 = currentDistance - distanceOffset;
+                                MainActivity.this.recBuffHdl.sendMessage(msg);
+                            }
                             /*// save data in file
                             if (r < 15 * recFs) {  // save first 10s' data
                                 for (int i = 0; i < recBufferReadRes; ++i) {
@@ -308,5 +339,16 @@ public class MainActivity extends AppCompatActivity {
                     throw new RuntimeException("Unknown handling thread met in recorder.");
             }
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+            doStop();
+            finish();
+            System.exit(0);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }

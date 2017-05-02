@@ -17,6 +17,7 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:onClick="startMeasuring"
+        android:soundEffectsEnabled="false"
         android:text="@string/btnStartText" />
 
     <Button
@@ -28,6 +29,7 @@
         android:layout_alignParentTop="true"
         android:enabled="false"
         android:onClick="stopMeasuring"
+        android:soundEffectsEnabled="false"
         android:text="@string/btnStopText" />
 
     <Button
@@ -38,6 +40,7 @@
         android:layout_centerHorizontal="true"
         android:enabled="false"
         android:onClick="onCalibration"
+        android:soundEffectsEnabled="false"
         android:text="@string/btnCalibrationText" />
 
     <TextView
@@ -65,7 +68,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"
-        android:text="@string/xValue"
+        android:text="@string/zValue"
         android:textSize="@dimen/text_defaultSize"
         android:layout_below="@+id/txvY"
         android:layout_centerHorizontal="true" />

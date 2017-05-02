@@ -3,9 +3,10 @@
     <string name="button_enlarge">Enlarge</string>
     <string name="button_shrink">shrink</string>
     <string name="button_reset">reset</string>
-    <string name="xValue">0.0</string>
+    <string name="xValue">0mm</string>
     <string name="yValue">0.0</string>
-    <string name="btnCalibrationText">Calibration</string>
+    <string name="zValue">0.0</string>
+    <string name="btnCalibrationText">Calibrate</string>
     <string name="btnStartText">Start</string>
     <string name="btnStopText">Stop</string>
 </resources>
